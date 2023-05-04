@@ -58,6 +58,11 @@ def signal_nu_pdg(ghdr, vert_id):
     if ghdr_nu_interaction[0]==nu_signal_pdg: return True
     else: return False
 
+
+def signal_cc(ghdr, vert_id):
+    ghdr_vert_mask = ghdr['vertexID']==vert_id
+    return ghdr[ghdr_vert_mask]['isCC'][0]
+
     
 
 def signal_pion_status(gstack, vert_id):
@@ -87,6 +92,7 @@ def main(sim_file, input_type):
             vert_in_active_LAr = fiducialized_vertex( vert_pos )
 
             nu_mu_bar = signal_nu_pdg(ghdr, vert['vertexID'][v_i])
+            is_cc = signal_cc(ghdr, vert['vertexID'][v_i])
             pionless = signal_pion_status(gstack, vert['vertexID'][v_i])
             
 
