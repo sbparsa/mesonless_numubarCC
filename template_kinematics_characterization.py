@@ -52,11 +52,22 @@ def fiducialized_vertex(vert_pos):
 
 
 
+def fiducialized_particle_origin(traj, vert_id):
+    traj_vert_mask = traj['vertexID']==vert_id
+    final_states = traj[traj_vert_mask]
+    for fs in final_states:
+        if fiducialized_vertex(fs['xyz_start'])==True:
+            return True
+    return False
+
+
+    
 def signal_nu_pdg(ghdr, vert_id):
     ghdr_vert_mask = ghdr['vertexID']==vert_id
     ghdr_nu_interaction = ghdr[ghdr_vert_mask]['nu_pdg']
     if ghdr_nu_interaction[0]==nu_signal_pdg: return True
     else: return False
+    
 
 
 def signal_cc(ghdr, vert_id):
@@ -94,7 +105,7 @@ def main(sim_file, input_type):
             nu_mu_bar = signal_nu_pdg(ghdr, vert['vertexID'][v_i])
             is_cc = signal_cc(ghdr, vert['vertexID'][v_i])
             pionless = signal_pion_status(gstack, vert['vertexID'][v_i])
-            
+            fv_particle_origin=fiducialized_particle_origin(traj, vert['vertexID'][v_i])
 
 
 if __name__=='__main__':
