@@ -119,24 +119,27 @@ def plot_threshold_backgrounds(d):
     piplus_parent_pdg_set=set(piplus_parent_pdg_list)
     piplus_particle_count=[(pdg, piplus_parent_pdg_list.count(pdg)) for pdg in piplus_parent_pdg_set]
     piplus_fraction=[100*(i[1]/len(piplus_parent_pdg_list)) for i in piplus_particle_count]
+    piplus_pdg_label=[str(i[0]) for i in piplus_particle_count]
     print('pi+: ',piplus_particle_count)
-    ax2[0].pie(piplus_fraction)
-
+    ax2[0].pie(piplus_fraction, labels=piplus_pdg_label, autopct='%1.1f%%')
+    ax2[0].set_title(r'$\pi^+$')
+    
     piminus_parent_pdg_list=[d[key]['parent_pdg'] for key in d.keys() if d[key]['pdg']==-211]
     piminus_parent_pdg_set=set(piminus_parent_pdg_list)
     piminus_particle_count=[(pdg, piminus_parent_pdg_list.count(pdg)) for pdg in piminus_parent_pdg_set]
     piminus_fraction=[100*(i[1]/len(piminus_parent_pdg_list)) for i in piminus_particle_count]
+    piminus_pdg_label=[str(i[0]) for i in piminus_particle_count]
     print('pi-: ',piminus_particle_count)
-    ax2[1].pie(piminus_fraction)
-
+    ax2[1].pie(piminus_fraction, labels=piminus_pdg_label, autopct='%1.1f%%')
+    ax2[1].set_title(r'$\pi^-$')
+    
     pi0_parent_pdg_list=[d[key]['parent_pdg'] for key in d.keys() if d[key]['pdg']==111]
     pi0_parent_pdg_set=set(pi0_parent_pdg_list)
     pi0_particle_count=[(pdg, pi0_parent_pdg_list.count(pdg)) for pdg in pi0_parent_pdg_set]
     pi0_fraction=[100*(i[1]/len(pi0_parent_pdg_list)) for i in pi0_particle_count]
+    pi0_pdg_label=[str(i[0]) for i in pi0_particle_count]
     print('pi0: ',pi0_particle_count)
-    ax2[2].pie(pi0_fraction)
-    ax2[0].set_title(r'$\pi^+$')
-    ax2[1].set_title(r'$\pi^-$')
+    ax2[2].pie(pi0_fraction, labels=pi0_pdg_label, autopct='%1.1f%%')
     ax2[2].set_title(r'$\pi^0$')
     plt.show()
 

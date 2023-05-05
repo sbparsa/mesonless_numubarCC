@@ -13,8 +13,10 @@ pion_pdg={111,211,-211}
 (1) Normalize to 2.5x10^19 POT
 (2) Check pi0 visible energy containment calculation
 (3) Optional multi-file consuming with glob
-(4) Plot: pion multiplicity per spill (total, by PDG)
-(5) Plot: parent PDG pie chart: add latex labels
+(4) Dump dictionary to json file
+(5) Plot: pion multiplicity per spill (total, by PDG)
+(6) Optional save plots as png or shown on screen
+(7) Function boolean per plot
 '''
 
 
