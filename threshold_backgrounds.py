@@ -1,5 +1,7 @@
+import matplotlib
+import matplotlib.pyplot as plt
 import twoBytwo_defs
-
+import numpy as np
 
 def pion_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, pion_dict):
     traj_vert_mask = traj['vertexID']==vert_id
