@@ -1,4 +1,4 @@
-
+import twoBytwo_defs
 
 
 def pion_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, pion_dict):
@@ -26,7 +26,7 @@ def pion_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, pion
                                       (sg['z_start']-sg['z_end'])**2) # *** total length ***                                                                                                              
 
             for sg in seg[seg_id_mask]:
-                if fiducialized_vertex( [(sg['x_start']+sg['x_end'])/2.,
+                if twoBytwo_defs.fiducialized_vertex( [(sg['x_start']+sg['x_end'])/2.,
                                          (sg['y_start']+sg['y_end'])/2.,
                                          (sg['z_start']+sg['z_end'])/2.] ):
                     contained_edep+=sg['dE'] # *** contained visible energy ***                                                                                                                           
@@ -57,7 +57,7 @@ def pion_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, pion
                 total_edep+=sum(seg[seg_id_mask]['dE']) # *** total visible energy ***
                 
                 for sg in seg[seg_id_mask]:
-                    if fiducialized_vertex( [(sg['x_start']+sg['x_end'])/2.,
+                    if twoBytwo_defs.fiducialized_vertex( [(sg['x_start']+sg['x_end'])/2.,
                                              (sg['y_start']+sg['y_end'])/2.,
                                              (sg['z_start']+sg['z_end'])/2.] ):
                         contained_edep+=sg['dE'] # *** contained visible energy ***

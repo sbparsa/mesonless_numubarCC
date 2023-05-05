@@ -73,3 +73,26 @@ def MINERvA_bounds(i):
                 bounds_relative_to_NDhall.append(bound[i] + MINERvA_center[i])
             
             return np.unique(np.array(bounds_relative_to_NDhall), axis = 0)
+
+
+def fiducialized_vertex(vert_pos):
+    flag=False; x_drift_flag=False; y_vertical_flag=False; z_beam_flag=False
+    for i in range(3):
+        for i_bounds, bounds in enumerate(tpc_bounds(i)):
+            if vert_pos[i]>bounds[0] and vert_pos[i]<bounds[1]:
+                if i==0: x_drift_flag=True; break
+                if i==1: y_vertical_flag=True
+                if i==2: z_beam_flag=True
+    if x_drift_flag==True and y_vertical_flag==True and z_beam_flag==True: flag\
+=True
+    return flag
+
+
+
+def fiducialized_particle_origin(traj, vert_id):
+    traj_vert_mask = traj['vertexID']==vert_id
+    final_states = traj[traj_vert_mask]
+    for fs in final_states:
+        if fiducialized_vertex(fs['xyz_start'])==True:
+            return True
+    return False

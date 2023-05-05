@@ -47,29 +47,6 @@ def get_spill_data(sim_h5, spill_id):
 
 
 
-def fiducialized_vertex(vert_pos):
-    flag=False; x_drift_flag=False; y_vertical_flag=False; z_beam_flag=False
-    for i in range(3):
-        for i_bounds, bounds in enumerate(twoBytwo_defs.tpc_bounds(i)):
-            if vert_pos[i]>bounds[0] and vert_pos[i]<bounds[1]:
-                if i==0: x_drift_flag=True; break
-                if i==1: y_vertical_flag=True
-                if i==2: z_beam_flag=True
-    if x_drift_flag==True and y_vertical_flag==True and z_beam_flag==True: flag=True
-    return flag
-
-
-
-def fiducialized_particle_origin(traj, vert_id):
-    traj_vert_mask = traj['vertexID']==vert_id
-    final_states = traj[traj_vert_mask]
-    for fs in final_states:
-        if fiducialized_vertex(fs['xyz_start'])==True:
-            return True
-    return False
-
-
-    
 def signal_nu_pdg(ghdr, vert_id):
     ghdr_vert_mask = ghdr['vertexID']==vert_id
     ghdr_nu_interaction = ghdr[ghdr_vert_mask]['nu_pdg']
@@ -108,7 +85,7 @@ def main(sim_file, input_type):
         ### partition by vertex ID within beam spill
         for v_i in range(len(vert['vertexID'])):
             vert_pos= [vert['x_vert'][v_i], vert['y_vert'][v_i], vert['z_vert'][v_i]]
-            vert_in_active_LAr = fiducialized_vertex( vert_pos )
+            vert_in_active_LAr = twoBytwo_defs.fiducialized_vertex( vert_pos )
 
             ##### REQUIRE neutrino vertex in LAr active volume #####
             if vert_in_active_LAr==False: continue
@@ -118,7 +95,7 @@ def main(sim_file, input_type):
             nu_mu_bar = signal_nu_pdg(ghdr, vert_id)
             is_cc = signal_cc(ghdr, vert_id)
             pionless = signal_pion_status(gstack, vert_id)
-            fv_particle_origin=fiducialized_particle_origin(traj, vert_id)
+            fv_particle_origin=twoBytwo_defs.fiducialized_particle_origin(traj, vert_id)
                         
             ##### THRESHOLD BACKGROUNDS #####
             ##### REQUIRE: (A) nu_mu_bar, (B) CC, (C) pions present, (D) final state particle start point in FV
