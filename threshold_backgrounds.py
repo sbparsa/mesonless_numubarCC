@@ -13,7 +13,7 @@ def pion_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, pion
         pdg = fs['pdgId'] # *** pdg ***                                                                                                                                                                   
         parent_id = fs['parentID']
         parent = final_states['trackID']==parent_id
-        parent_pdg = final_states['pdgId'][0] # *** parent pdg ***
+        parent_pdg = final_states[parent]['pdgId'] # *** parent pdg ***
         
         track_id = fs['trackID']
         total_edep=0.; contained_edep=0.; total_length=0.; contained_length=0.
