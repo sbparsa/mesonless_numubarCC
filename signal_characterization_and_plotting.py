@@ -7,7 +7,6 @@ import numpy as np
 '''TO DO:
 (1) Add method to save dict with hadron info (per interaction) (NEW METHOD)
 (2) Add plotting for hadrons (NEW METHOD)
-(3) Add muon truth info plots to plot_muons method
 '''
         
 def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon_dict):
@@ -24,7 +23,7 @@ def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon
         pdg = fs['pdgId'] # *** pdg ***                                                                                                                                                                   
         parent_id = fs['parentID']
         parent = final_states['trackID']==parent_id
-        parent_pdg = final_states[parent]['pdgId'][0] # *** parent pdg ***
+        parent_pdg = final_states[parent]['pdgId'] # *** parent pdg ***
         
         track_id = fs['trackID']
         total_edep=0.; contained_edep=0.; total_length=0.; contained_length=0.
@@ -109,11 +108,11 @@ def plot_muons(d, sig_bkg = 0):
                                                   
     # PLOT: total visible energy + contained visible energy
     fig0, ax0 = plt.subplots(figsize=(12,4))
-    bins=np.linspace(0,1000,50)
+    bins0=np.linspace(0,1000,50)
     ax0.hist([d[key]['total_edep'] for key in d.keys()],
-                bins=bins, label='total', histtype='step')
+                bins=bins0, label='total', histtype='step')
     ax0.hist([d[key]['contained_edep'] for key in d.keys()],
-                bins=bins, label='contained',histtype='step')
+                bins=bins0, label='contained',histtype='step')
     ax0.set_xlabel('Visible Energy [MeV]')
     ax0.set_ylabel('Count / 20 MeV')
     ax0.set_title(r'Muon Energy')
@@ -124,12 +123,40 @@ def plot_muons(d, sig_bkg = 0):
 
     # PLOT: muon energy containment fraction
     fig1, ax1 = plt.subplots(figsize=(6,4))
-    bins=np.linspace(0,1,20)
+    bins1=np.linspace(0,1,20)
     ax1.hist([d[key]['contained_edep']/d[key]['total_edep'] for key in d.keys() if d[key]['pdg']==13 and d[key]['total_edep']!=0],
-             bins=bins, histtype='step')
+             bins=bins1, histtype='step')
     ax1.set_xlabel('Visible Muon Energy Containment Fraction')
     ax1.set_ylabel('Count')
     ax1.legend()
     ax1.grid(True)
     plt.show()      
-    plt.savefig(sample_type+"_events_muon_containment_fraction.png")                             
+    plt.savefig(sample_type+"_events_muon_containment_fraction.png")    
+    
+    # PLOT: truth-level outgoing muon (lepton) angle 
+    fig2, ax2 = plt.subplots(figsize=(6,4))
+    bins2 = np.linspace(0,66,34)
+    ax2.hist([d[key]['true_angle'] for key in d.keys()], bins=bins2)
+    ax2.set_xlabel(r"Outgoing Muon Angle with Beam Direction [$^\circ$]")
+    ax2.set_ylabel("Count")
+    plt.show()
+    plt.savefig(sample_type+"_events_outgoing_muon_angle_truth.png")   
+
+    # PLOT: truth-level outgoing muon (lepton) momentum 
+    fig3, ax3 = plt.subplots(figsize=(6,4))
+    bins3 = np.linspace(0,50,51)
+    ax3.hist([d[key]['true_mom']/1000 for key in d.keys()], bins=bins3)
+    ax3.set_xlabel(r"Outgoing Muon Momentum [GeV]")
+    ax3.set_ylabel("Count")
+    plt.show()  
+    plt.savefig(sample_type+"_events_outgoing_muon_momentum_truth.png")  
+
+    # PLOT: truth-level outgoing muon (lepton) energy 
+    # I think this is redundant with muon momentum plot, but adding just to see
+    fig4, ax4 = plt.subplots(figsize=(6,4))
+    bins4 = np.linspace(0,50,51)
+    ax4.hist([d[key]['true_energy']/1000 for key in d.keys()], bins=bins3)
+    ax4.set_xlabel(r"Outgoing Muon Energy [GeV]")
+    ax4.set_ylabel("Count")
+    plt.show()  
+    plt.savefig(sample_type+"_events_outgoing_muon_energy_truth.png")                      
