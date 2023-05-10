@@ -118,7 +118,6 @@ def plot_muons(d, sig_bkg = 0):
     ax0.set_title(r'Muon Energy')
     ax0.legend()
     ax0.grid(True)
-    plt.show()
     plt.savefig(sample_type+"_events_muon_visible_energy.png")
 
     # PLOT: muon energy containment fraction
@@ -128,9 +127,7 @@ def plot_muons(d, sig_bkg = 0):
              bins=bins1, histtype='step')
     ax1.set_xlabel('Visible Muon Energy Containment Fraction')
     ax1.set_ylabel('Count')
-    ax1.legend()
-    ax1.grid(True)
-    plt.show()      
+    ax1.grid(True)       
     plt.savefig(sample_type+"_events_muon_containment_fraction.png")    
     
     # PLOT: truth-level outgoing muon (lepton) angle 
@@ -139,7 +136,6 @@ def plot_muons(d, sig_bkg = 0):
     ax2.hist([d[key]['true_angle'] for key in d.keys()], bins=bins2)
     ax2.set_xlabel(r"Outgoing Muon Angle with Beam Direction [$^\circ$]")
     ax2.set_ylabel("Count")
-    plt.show()
     plt.savefig(sample_type+"_events_outgoing_muon_angle_truth.png")   
 
     # PLOT: truth-level outgoing muon (lepton) momentum 
@@ -148,7 +144,6 @@ def plot_muons(d, sig_bkg = 0):
     ax3.hist([d[key]['true_mom']/1000 for key in d.keys()], bins=bins3)
     ax3.set_xlabel(r"Outgoing Muon Momentum [GeV]")
     ax3.set_ylabel("Count")
-    plt.show()  
     plt.savefig(sample_type+"_events_outgoing_muon_momentum_truth.png")  
 
     # PLOT: truth-level outgoing muon (lepton) energy 
@@ -157,6 +152,5 @@ def plot_muons(d, sig_bkg = 0):
     bins4 = np.linspace(0,50,51)
     ax4.hist([d[key]['true_energy']/1000 for key in d.keys()], bins=bins3)
     ax4.set_xlabel(r"Outgoing Muon Energy [GeV]")
-    ax4.set_ylabel("Count")
-    plt.show()  
+    ax4.set_ylabel("Count") 
     plt.savefig(sample_type+"_events_outgoing_muon_energy_truth.png")                      

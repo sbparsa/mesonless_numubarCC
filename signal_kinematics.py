@@ -23,25 +23,25 @@ def print_keys_attributes(sim_h5):
     print(sim_h5.keys())
     print('GENIE HDR: ',sim_h5['genie_hdr'].dtype)
     print('GENIE STACK: ',sim_h5['genie_stack'].dtype)
-    print('SEGMENTS: ', sim_h5['segments'].dtype)
+    print('TRACKS: ', sim_h5['tracks'].dtype)
     print('TRAJECTORIES', sim_h5['trajectories'].dtype)
     print('VERTICES', sim_h5['vertices'].dtype)
 
 
 def get_spill_data(sim_h5, spill_id):
     ### mask data if not spill under consideration
-    ghdr_spill_mask = sim_h5['genie_hdr'][:]['spillID']==spill_id
-    gstack_spill_mask = sim_h5['genie_stack'][:]['spillID']==spill_id
-    traj_spill_mask = sim_h5['trajectories'][:]['spillID']==spill_id
-    vert_spill_mask = sim_h5['vertices'][:]['spillID']==spill_id
-    seg_spill_mask = sim_h5['segments'][:]['spillID']==spill_id
+    ghdr_spill_mask = sim_h5['genie_hdr'][:]['eventID']==spill_id
+    gstack_spill_mask = sim_h5['genie_stack'][:]['eventID']==spill_id
+    traj_spill_mask = sim_h5['trajectories'][:]['eventID']==spill_id
+    vert_spill_mask = sim_h5['vertices'][:]['eventID']==spill_id
+    seg_spill_mask = sim_h5['tracks'][:]['eventID']==spill_id
 
     ### apply spill mask
     ghdr = sim_h5['genie_hdr'][ghdr_spill_mask]
     gstack = sim_h5['genie_stack'][gstack_spill_mask]
     traj = sim_h5['trajectories'][traj_spill_mask]
     vert = sim_h5['vertices'][vert_spill_mask]
-    seg = sim_h5['segments'][seg_spill_mask]
+    seg = sim_h5['tracks'][seg_spill_mask]
     
     return ghdr, gstack, traj, vert, seg
 
@@ -74,7 +74,7 @@ def main(sim_file, input_type):
     muon_dict = dict()
 
     ### partition file by spill
-    unique_spill = np.unique(sim_h5['trajectories']['spillID'])
+    unique_spill = np.unique(sim_h5['trajectories']['eventID'])
     for spill_id in unique_spill:
 
         ghdr, gstack, traj, vert, seg = get_spill_data(sim_h5, spill_id)
@@ -100,11 +100,11 @@ def main(sim_file, input_type):
                 ### TO DO: Hadron dict
 
             ### TO DO: Plot muon momentum and kinematics
-
+    sig_char_plot.plot_muons(muon_dict)
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--sim_file', default=None, required=True, type=str, help='''string corresponding to the path of the edep-sim ouput simulation file to be considered''')
-    parser.add_argument('-t', '--input_type', default='edep', choices=['edep', 'larnd'], type=str, help='''string corresponding to the output file type: edep or larnd''')
+    parser.add_argument('-t', '--input_type', default='larnd', choices=['edep', 'larnd'], type=str, help='''string corresponding to the output file type: edep or larnd''')
     args = parser.parse_args()
     main(**vars(args))

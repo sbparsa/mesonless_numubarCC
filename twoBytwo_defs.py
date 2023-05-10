@@ -83,8 +83,7 @@ def fiducialized_vertex(vert_pos):
                 if i==0: x_drift_flag=True; break
                 if i==1: y_vertical_flag=True
                 if i==2: z_beam_flag=True
-    if x_drift_flag==True and y_vertical_flag==True and z_beam_flag==True: flag\
-=True
+    if x_drift_flag==True and y_vertical_flag==True and z_beam_flag==True: flag=True
     return flag
 
 
