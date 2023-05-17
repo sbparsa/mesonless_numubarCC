@@ -53,7 +53,7 @@ def main(sim_file, input_type):
         ### partition file by spill
         unique_spill = np.unique(sim_h5['trajectories']['spillID'])
         for spill_id in unique_spill:
-            ghdr, gstack, traj, vert, seg = auxiliary.get_spill_data(sim_h5, spill_id)
+            ghdr, gstack, traj, vert, seg = auxiliary.get_spill_data(sim_h5, spill_id, input_type)
 
             ### partition by vertex ID within beam spill
             for v_i in range(len(vert['vertexID'])):

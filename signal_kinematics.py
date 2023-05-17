@@ -56,7 +56,6 @@ def main(sim_dir, input_type):
         file_ext = '.EDEPSIM.h5'
 
     for sim_file in glob.glob(sim_dir+'/*'+file_ext):
-
         if test_count ==20 : break
         test_count+=1
 
@@ -69,7 +68,7 @@ def main(sim_dir, input_type):
         unique_spill = np.unique(sim_h5['trajectories']['eventID'])
         for spill_id in unique_spill:
 
-            ghdr, gstack, traj, vert, seg = auxiliary.get_spill_data(sim_h5, spill_id)
+            ghdr, gstack, traj, vert, seg = auxiliary.get_spill_data(sim_h5, spill_id, input_type)
 
             ### partition by vertex ID within beam spill
             for v_i in range(len(vert['vertexID'])):
