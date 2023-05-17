@@ -5,6 +5,7 @@ import argparse
 import numpy as np
 import twoBytwo_defs
 import dirt_backgrounds
+import signal_characterization_and_plotting as sig_char_plot
 import glob
 
 nu_signal_pdg=-14
@@ -33,11 +34,11 @@ def print_keys_attributes(sim_h5):
 
 def get_spill_data(sim_h5, spill_id):
     ### mask data if not spill under consideration
-    ghdr_spill_mask = sim_h5['genie_hdr'][:]['spillID']==spill_id
-    gstack_spill_mask = sim_h5['genie_stack'][:]['spillID']==spill_id
-    traj_spill_mask = sim_h5['trajectories'][:]['spillID']==spill_id
-    vert_spill_mask = sim_h5['vertices'][:]['spillID']==spill_id
-    seg_spill_mask = sim_h5['tracks'][:]['spillID']==spill_id
+    ghdr_spill_mask = sim_h5['genie_hdr'][:]['eventID']==spill_id ##larnd_v2 has eventID instead of spillID
+    gstack_spill_mask = sim_h5['genie_stack'][:]['eventID']==spill_id
+    traj_spill_mask = sim_h5['trajectories'][:]['eventID']==spill_id
+    vert_spill_mask = sim_h5['vertices'][:]['eventID']==spill_id
+    seg_spill_mask = sim_h5['tracks'][:]['eventID']==spill_id
 
     ### apply spill mask
     ghdr = sim_h5['genie_hdr'][ghdr_spill_mask]
@@ -72,18 +73,23 @@ def signal_pion_status(gstack, vert_id):
 
 
     
-def main(file_dir, input_type):
+def main(sim_dir, input_type):
  
     #sim_h5 = h5py.File(sim_file,'r')
     dirt_muon_dict = dict()
+    file_count =0
     
-    for sim_file in glob.glob(file_dir+'*.h5'):
+    #print('start')
+    for sim_file in glob.glob(sim_dir+'*.h5'):
         sim_h5 = h5py.File(sim_file, 'r')
-        print('Openning new file: ', sim_file)
-        print_keys_attributes(sim_h5)
-    
+        #print('Openning new file: ', sim_file)
+        #print_keys_attributes(sim_h5)
+
+        if file_count== 10: break
+        file_count+=1
+        
         ### partition file by spill
-        unique_spill = np.unique(sim_h5['trajectories']['spillID']) #spillID
+        unique_spill = np.unique(sim_h5['trajectories']['eventID']) #spillID
         for spill_id in unique_spill:
 
             ghdr, gstack, traj, vert, seg = get_spill_data(sim_h5, spill_id)
@@ -92,7 +98,8 @@ def main(file_dir, input_type):
             for v_i in range(len(vert['vertexID'])):
                 vert_pos= [vert['x_vert'][v_i], vert['y_vert'][v_i], vert['z_vert'][v_i]]
                 vert_in_active_LAr = twoBytwo_defs.fiducialized_vertex( vert_pos )
-
+                #print(vert_pos)
+                
                 ##### REQUIRE neutrino vertex out of LAr active volume #####
                 if vert_in_active_LAr==True: continue
 
@@ -109,17 +116,21 @@ def main(file_dir, input_type):
 
                 if fv_particle_origin==True: ## change the criteria
                     dirt_backgrounds.dirt_muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, dirt_muon_dict)
+                    #sig_char_plot.muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, dirt_muon_dict)
+
             # end vertex loop
         #end spill loop
     #end of file loop
 
-    dirt_backgrounds.plot_dirt_backgrounds(dirt_muon_dict) #plotting
-
+    #sig_char_plot.plot_muons(dirt_muon_dict,1) #plotting
+    dirt_backgrounds.plot_dirt_backgrounds(dirt_muon_dict,1) #plotting
+    print (dirt_muon_dict)
+    
     #end
     
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--file_dir', default=None, type = str, help = ''' string path to the directory of simulation files ''' )
+    parser.add_argument('-d', '--sim_dir', default=None, type = str, help = ''' string path to the directory of simulation files ''' )
     #parser.add_argument('-f', '--sim_file', default=None, type=str, help='''string corresponding to the path of the edep-sim ouput simulation file to be considered''')
     parser.add_argument('-t', '--input_type', default='edep', choices=['edep', 'larnd'], type=str, help='''string corresponding to the output file type: edep or larnd''')
     args = parser.parse_args()
