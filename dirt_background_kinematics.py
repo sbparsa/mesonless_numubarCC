@@ -4,6 +4,7 @@ import h5py
 import argparse
 import numpy as np
 import twoBytwo_defs
+import auxiliary
 import dirt_backgrounds
 import signal_characterization_and_plotting as sig_char_plot
 import glob
@@ -20,34 +21,6 @@ pion_pdg={111,211,-211}
 (6) Optional save plots as png or shown on screen
 (7) Function boolean per plot
 '''
-
-
-def print_keys_attributes(sim_h5):
-    print(sim_h5.keys(),'\n')
-    print('GENIE HDR: ',sim_h5['genie_hdr'].dtype,'\n')
-    print('GENIE STACK: ',sim_h5['genie_stack'].dtype,'\n')
-    print('TRACKS: ', sim_h5['tracks'].dtype,'\n')
-    print('TRAJECTORIES', sim_h5['trajectories'].dtype,'\n')
-    print('VERTICES', sim_h5['vertices'].dtype)
-
-    
-
-def get_spill_data(sim_h5, spill_id):
-    ### mask data if not spill under consideration
-    ghdr_spill_mask = sim_h5['genie_hdr'][:]['eventID']==spill_id ##larnd_v2 has eventID instead of spillID
-    gstack_spill_mask = sim_h5['genie_stack'][:]['eventID']==spill_id
-    traj_spill_mask = sim_h5['trajectories'][:]['eventID']==spill_id
-    vert_spill_mask = sim_h5['vertices'][:]['eventID']==spill_id
-    seg_spill_mask = sim_h5['tracks'][:]['eventID']==spill_id
-
-    ### apply spill mask
-    ghdr = sim_h5['genie_hdr'][ghdr_spill_mask]
-    gstack = sim_h5['genie_stack'][gstack_spill_mask]
-    traj = sim_h5['trajectories'][traj_spill_mask]
-    vert = sim_h5['vertices'][vert_spill_mask]
-    seg = sim_h5['tracks'][seg_spill_mask]
-    
-    return ghdr, gstack, traj, vert, seg
 
 
 
@@ -83,7 +56,7 @@ def main(sim_dir, input_type):
     for sim_file in glob.glob(sim_dir+'*.h5'):
         sim_h5 = h5py.File(sim_file, 'r')
         #print('Openning new file: ', sim_file)
-        #print_keys_attributes(sim_h5)
+        #auxiliary.print_keys_attributes(sim_h5)
 
         if file_count== 10: break
         file_count+=1
@@ -92,7 +65,7 @@ def main(sim_dir, input_type):
         unique_spill = np.unique(sim_h5['trajectories']['eventID']) #spillID
         for spill_id in unique_spill:
 
-            ghdr, gstack, traj, vert, seg = get_spill_data(sim_h5, spill_id)
+            ghdr, gstack, traj, vert, seg = auxiliary.get_spill_data(sim_h5, spill_id)
 
             ### partition by vertex ID within beam spill
             for v_i in range(len(vert['vertexID'])):
