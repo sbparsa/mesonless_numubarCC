@@ -77,6 +77,29 @@ def save_dict_to_json(d, name, if_tuple):
             json.dump(d, outfile, indent=4)
 
 
+##### SIGNAL BASIC CHARACTERISTICS--------------------------
+def signal_nu_pdg(ghdr, vert_id):
+    ghdr_vert_mask = ghdr['vertexID']==vert_id
+    ghdr_nu_interaction = ghdr[ghdr_vert_mask]['nu_pdg']
+    if ghdr_nu_interaction[0]==nu_signal_pdg: return True
+    else: return False
+
+
+
+def signal_cc(ghdr, vert_id):
+    ghdr_vert_mask = ghdr['vertexID']==vert_id
+    return ghdr[ghdr_vert_mask]['isCC'][0]
+
+
+
+def signal_pion_status(gstack, vert_id):
+    gstack_vert_mask = gstack['vertexID']==vert_id
+    gstack_pdg_set = set(gstack[gstack_vert_mask]['part_pdg'])
+    if len(pion_pdg.intersection(gstack_pdg_set))==0: return True
+    else: return False
+
+
+    
 ##### FIND PARENT PDG --------------------------------------
 def find_parent_pdg(parent_id, vertex_id, traj, ghdr):
     if parent_id==-1:

@@ -18,29 +18,6 @@ pion_pdg={111,211,-211}
 '''
 
 
-def signal_nu_pdg(ghdr, vert_id):
-    ghdr_vert_mask = ghdr['vertexID']==vert_id
-    ghdr_nu_interaction = ghdr[ghdr_vert_mask]['nu_pdg']
-    if ghdr_nu_interaction[0]==nu_signal_pdg: return True
-    else: return False
-    
-
-
-def signal_cc(ghdr, vert_id):
-    ghdr_vert_mask = ghdr['vertexID']==vert_id
-    return ghdr[ghdr_vert_mask]['isCC'][0]
-
-    
-
-def signal_pion_status(gstack, vert_id):
-    gstack_vert_mask = gstack['vertexID']==vert_id
-    gstack_pdg_set = set(gstack[gstack_vert_mask]['part_pdg'])
-    #print("Event PDG Stack:", gstack_pdg_set)
-    if len(pion_pdg.intersection(gstack_pdg_set))==0: return True
-    else: return False
-
-
-
 def main(sim_dir, input_type):
 
     test_count = 0
@@ -83,9 +60,9 @@ def main(sim_dir, input_type):
 
                 vert_id = vert['vertexID'][v_i]
 
-                nu_mu_bar = signal_nu_pdg(ghdr, vert_id)
-                is_cc = signal_cc(ghdr, vert_id)
-                pionless = signal_pion_status(gstack, vert_id)
+                nu_mu_bar = auxiliary.signal_nu_pdg(ghdr, vert_id)
+                is_cc = auxiliary.signal_cc(ghdr, vert_id)
+                pionless = auxiliary.signal_pion_status(gstack, vert_id)
                 fv_particle_origin=twoBytwo_defs.fiducialized_particle_origin(traj, vert_id)
 
                 ##### REQUIRE: (A) nu_mu_bar, (B) CC, (C) NO pions present, (D) final state particle start point in FV
