@@ -8,16 +8,9 @@ import threshold_backgrounds
 import auxiliary
 import glob
 
-file_dir='/global/cfs/cdirs/dune/www/data/2x2/simulation/productions/MiniRun3_1E19_RHC/MiniRun3_1E19_RHC.convert2h5.withMinerva/EDEPSIM_H5/'
-#file_dir='/home/russell/DUNE/2x2/numubar_cc_0pi/'
-
 nu_signal_pdg=-14
 pion_pdg={111,211,-211}
 
-'''TO DO:
-(1) Add pion angle(s) (which one(s)?)
-(2) Change total edep to kinetic energy
-'''
 
 
 
@@ -43,13 +36,18 @@ def signal_pion_status(gstack, vert_id):
 
 
     
-def main(sim_file, input_type, save):
+def main(sim_file, input_type):
     cc_dict, nc_dict, cc_primaries_dict, nc_primaries_dict = [dict() for i in range(4)]
     file_ctr=0
-    for sim_file in glob.glob(file_dir+'*.EDEPSIM.h5'):
+
+    file_ext = '' ### modified by commandline argument
+    if input_type=='larnd': file_ext='.LARNDSIM.h5'
+    elif input_typw=='edep': file_ext='.EDEPSIM.h5'
+    
+    for sim_file in glob.glob(sim_dir+'/*'+file_ext):
         file_ctr+=1
         if file_ctr>30: break
-        print('FILE #: ',file_ctr)
+        if file_ctr%10==0: print('FILE #: ',file_ctr)
         sim_h5 = h5py.File(sim_file,'r')
     
         ### partition file by spill
@@ -91,8 +89,9 @@ def main(sim_file, input_type, save):
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-f', '--sim_file', default=None, required=False, type=str, help='''string corresponding to the path of the edep-sim ouput simulation file to be considered''')
-    parser.add_argument('-t', '--input_type', default='edep', choices=['edep', 'larnd'], type=str, help='''string corresponding to the output file type: edep or larnd''')
-    parser.add_argument('-s', '--save', default=True, type=bool, help='''Save plot to PNG if true; otherwise, show in screen''')
+    parser.add_argument('-d', '--sim_dir', default=None, required=True, type=str, \
+                        help='''string corresponding to the path of the directory containing edep-sim or larnd ouput simulation file(s)''')
+    parser.add_argument('-t', '--input_type', default='edep', choices=['edep', 'larnd'], type=str, \
+                        help='''string corresponding to the output file type: edep or larnd''')
     args = parser.parse_args()
     main(**vars(args))
