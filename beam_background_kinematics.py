@@ -48,13 +48,13 @@ def main(sim_file, input_type):
                         
                 ##### THRESHOLD BACKGROUNDS #####
                 if is_cc==True and pionless==False and fv_particle_origin==True:
-                    threshold_backgrounds.pion_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, cc_dict)
-                    threshold_backgrounds.primaries(spill_id, vert_id, ghdr, gstack, traj, vert, seg, cc_primaries_dict)
+                    mip_backgrounds.pion_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, cc_dict)
+                    mip_backgrounds.primaries(spill_id, vert_id, ghdr, gstack, traj, vert, seg, cc_primaries_dict)
 
                 ##### PID BACKGROUNDS #####
                 if is_cc==False and pionless==False and fv_particle_origin==True:
-                    threshold_backgrounds.pion_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, nc_dict)
-                    threshold_backgrounds.primaries(spill_id, vert_id, ghdr, gstack, traj, vert, seg, nc_primaries_dict)
+                    mip_backgrounds.pion_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, nc_dict)
+                    mip_backgrouns.primaries(spill_id, vert_id, ghdr, gstack, traj, vert, seg, nc_primaries_dict)
 
     auxiliary.save_dict_to_json(cc_dict, 'cc_pion_backgrounds', True)
     auxiliary.save_dict_to_json(cc_primaries_dict, 'cc_primaries', True)
