@@ -5,47 +5,19 @@ import argparse
 import numpy as np
 import twoBytwo_defs
 import threshold_backgrounds
+import auxiliary
+import glob
+
+file_dir='/global/cfs/cdirs/dune/www/data/2x2/simulation/productions/MiniRun3_1E19_RHC/MiniRun3_1E19_RHC.convert2h5.withMinerva/EDEPSIM_H5/'
+#file_dir='/home/russell/DUNE/2x2/numubar_cc_0pi/'
 
 nu_signal_pdg=-14
 pion_pdg={111,211,-211}
 
 '''TO DO:
-(1) Normalize to 2.5x10^19 POT
-(2) Check pi0 visible energy containment calculation
-(3) Optional multi-file consuming with glob
-(4) Dump dictionary to json file
-(5) Plot: pion multiplicity per spill (total, by PDG)
-(6) Optional save plots as png or shown on screen
-(7) Function boolean per plot
+(1) Add pion angle(s) (which one(s)?)
+(2) Change total edep to kinetic energy
 '''
-
-
-def print_keys_attributes(sim_h5):
-    print(sim_h5.keys(),'\n')
-    print('GENIE HDR: ',sim_h5['genie_hdr'].dtype,'\n')
-    print('GENIE STACK: ',sim_h5['genie_stack'].dtype,'\n')
-    print('SEGMENTS: ', sim_h5['segments'].dtype,'\n')
-    print('TRAJECTORIES', sim_h5['trajectories'].dtype,'\n')
-    print('VERTICES', sim_h5['vertices'].dtype)
-
-    
-
-def get_spill_data(sim_h5, spill_id):
-    ### mask data if not spill under consideration
-    ghdr_spill_mask = sim_h5['genie_hdr'][:]['spillID']==spill_id
-    gstack_spill_mask = sim_h5['genie_stack'][:]['spillID']==spill_id
-    traj_spill_mask = sim_h5['trajectories'][:]['spillID']==spill_id
-    vert_spill_mask = sim_h5['vertices'][:]['spillID']==spill_id
-    seg_spill_mask = sim_h5['segments'][:]['spillID']==spill_id
-
-    ### apply spill mask
-    ghdr = sim_h5['genie_hdr'][ghdr_spill_mask]
-    gstack = sim_h5['genie_stack'][gstack_spill_mask]
-    traj = sim_h5['trajectories'][traj_spill_mask]
-    vert = sim_h5['vertices'][vert_spill_mask]
-    seg = sim_h5['segments'][seg_spill_mask]
-    
-    return ghdr, gstack, traj, vert, seg
 
 
 
@@ -71,45 +43,56 @@ def signal_pion_status(gstack, vert_id):
 
 
     
-def main(sim_file, input_type):
-
-    sim_h5 = h5py.File(sim_file,'r')
-    pion_dict = dict()
-
-#    print_keys_attributes(sim_h5)
+def main(sim_file, input_type, save):
+    cc_dict, nc_dict, cc_primaries_dict, nc_primaries_dict = [dict() for i in range(4)]
+    file_ctr=0
+    for sim_file in glob.glob(file_dir+'*.EDEPSIM.h5'):
+        file_ctr+=1
+        if file_ctr>30: break
+        print('FILE #: ',file_ctr)
+        sim_h5 = h5py.File(sim_file,'r')
     
-    ### partition file by spill
-    unique_spill = np.unique(sim_h5['trajectories']['spillID'])
-    for spill_id in unique_spill:
+        ### partition file by spill
+        unique_spill = np.unique(sim_h5['trajectories']['spillID'])
+        for spill_id in unique_spill:
+            ghdr, gstack, traj, vert, seg = auxiliary.get_spill_data(sim_h5, spill_id)
 
-        ghdr, gstack, traj, vert, seg = get_spill_data(sim_h5, spill_id)
+            ### partition by vertex ID within beam spill
+            for v_i in range(len(vert['vertexID'])):
+                vert_pos= [vert['x_vert'][v_i], vert['y_vert'][v_i], vert['z_vert'][v_i]]
+                vert_in_active_LAr = twoBytwo_defs.fiducialized_vertex( vert_pos )
 
-        ### partition by vertex ID within beam spill
-        for v_i in range(len(vert['vertexID'])):
-            vert_pos= [vert['x_vert'][v_i], vert['y_vert'][v_i], vert['z_vert'][v_i]]
-            vert_in_active_LAr = twoBytwo_defs.fiducialized_vertex( vert_pos )
+                ##### REQUIRE neutrino vertex in LAr active volume #####
+                if vert_in_active_LAr==False: continue
 
-            ##### REQUIRE neutrino vertex in LAr active volume #####
-            if vert_in_active_LAr==False: continue
-
-            vert_id = vert['vertexID'][v_i]
+                vert_id = vert['vertexID'][v_i]
             
-            nu_mu_bar = signal_nu_pdg(ghdr, vert_id)
-            is_cc = signal_cc(ghdr, vert_id)
-            pionless = signal_pion_status(gstack, vert_id)
-            fv_particle_origin=twoBytwo_defs.fiducialized_particle_origin(traj, vert_id)
+                nu_mu_bar = signal_nu_pdg(ghdr, vert_id)
+                is_cc = signal_cc(ghdr, vert_id)
+                pionless = signal_pion_status(gstack, vert_id)
+                fv_particle_origin=twoBytwo_defs.fiducialized_particle_origin(traj, vert_id)
                         
-            ##### THRESHOLD BACKGROUNDS #####
-            ##### REQUIRE: (A) nu_mu_bar, (B) CC, (C) pions present, (D) final state particle start point in FV
-            if nu_mu_bar==True and is_cc==True and pionless==False and fv_particle_origin==True:
-                threshold_backgrounds.pion_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, pion_dict)
-                
-    threshold_backgrounds.plot_threshold_backgrounds(pion_dict)
+                ##### THRESHOLD BACKGROUNDS #####
+                if is_cc==True and pionless==False and fv_particle_origin==True:
+                    threshold_backgrounds.pion_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, cc_dict)
+                    threshold_backgrounds.primaries(spill_id, vert_id, ghdr, gstack, traj, vert, seg, cc_primaries_dict)
+
+                ##### PID BACKGROUNDS #####
+                if is_cc==False and pionless==False and fv_particle_origin==True:
+                    threshold_backgrounds.pion_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, nc_dict)
+                    threshold_backgrounds.primaries(spill_id, vert_id, ghdr, gstack, traj, vert, seg, nc_primaries_dict)
+
+    auxiliary.save_dict_to_json(cc_dict, 'cc_pion_backgrounds', True)
+    auxiliary.save_dict_to_json(cc_primaries_dict, 'cc_primaries', True)
+    auxiliary.save_dict_to_json(nc_dict, 'nc_pion_backgrounds', True)
+    auxiliary.save_dict_to_json(nc_primaries_dict, 'nc_primaries', True)
+    
 
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-f', '--sim_file', default=None, required=True, type=str, help='''string corresponding to the path of the edep-sim ouput simulation file to be considered''')
+    parser.add_argument('-f', '--sim_file', default=None, required=False, type=str, help='''string corresponding to the path of the edep-sim ouput simulation file to be considered''')
     parser.add_argument('-t', '--input_type', default='edep', choices=['edep', 'larnd'], type=str, help='''string corresponding to the output file type: edep or larnd''')
+    parser.add_argument('-s', '--save', default=True, type=bool, help='''Save plot to PNG if true; otherwise, show in screen''')
     args = parser.parse_args()
     main(**vars(args))
