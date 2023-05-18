@@ -11,41 +11,30 @@ def dirt_muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg,
     ghdr_vert_mask = ghdr['vertexID']==vert_id
     truth_level_summ = ghdr[ghdr_vert_mask]
 
-    ## thg=is works if event is cc
-    # Save truth-level outgoing muon momentum   
-    true_mom = truth_level_summ['lep_mom']
-    
-    # Save truth-level muon angle with beam                                                                                 
-    true_angle = truth_level_summ['lep_ang']
-
-    # Save truth-level outgoing muon energy                                                                                
-    true_energy = truth_level_summ['Elep']
-    
-    # Save truth-level neutrino energy                                                                                   
-    nu_energy = truth_level_summ['Enu']
-
-    # Save truth-level interaction 4-momentum squared                                                                     
-    q_sq = truth_level_summ['Q2']
 
     total_edep=0.; contained_edep=0.; total_length=0.; contained_length=0.
     
 
     #print("PDG IDs of F.S. Particles:", final_states['pdgId'])
-    gstack_vert_mask = gstack['vertexID']==vert_id
-    gstack_pdg_set = set(gstack[gstack_vert_mask]['part_pdg'])
+    #gstack_vert_mask = gstack['vertexID']==vert_id
+    #gstack_pdg_set = set(gstack[gstack_vert_mask]['part_pdg'])
     #print("Event PDG Stack:", gstack_pdg_set)
     
     for fs in final_states:
         if fs['pdgId'] not in [13, -13]: continue # [111,211,-211]: continue
 
+        #cut on mu length
+        if np.linalg.norm(np.subtract(fs['xyz_end'],fs['xyz_start']))< 10: continue
+
         ##place a cut for backgrounds
         #print('muon start point', fs['xyz_start'])
         #print('muon end point', fs['xyz_end'])
         if( twoBytwo_defs.fiducialized_vertex(fs['xyz_start'])):
-            print('This is a dirt background')
-            print('Neutrino vertex: ', truth_level_summ['vertex'])
-            print('muon start point: ', fs['xyz_start'])
-            print('muon end point: ', fs['xyz_end'])
+            mu_length = np.linalg.norm(np.subtract(fs['xyz_end'],fs['xyz_start']))
+            #print('This is a dirt background')
+            #print('Neutrino vertex: ', truth_level_summ['vertex'])
+            #print('muon start point: ', fs['xyz_start'])
+            #print('muon end point: ', fs['xyz_end'])
         else:
             #print('started out of FV')
             continue
@@ -55,15 +44,57 @@ def dirt_muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg,
         parent_id = fs['parentID']
         parent = final_states['trackID']==parent_id
 
-        parent_pdg = final_states[parent]['pdgId'] # *** parent pdg ***
+        #parent_pdg = final_states[parent]['pdgId'] # *** parent pdg ***
 
         if parent_id ==-1:
-            ghdr_mask = ghdr['vertexID']==fs['vertexID']
+            print('mu parent was a neutrino')
+            ghdr_mask = ghdr['vertexID']=fs['vertexID']
             parent_pdg = ghdr[ghdr_mask]['nu_pdg']
+            parent_pdg = parent_pdg.tolist()[0]
 
-        parent_pdg = parent_pdg.tolist()[0]
-        #print('check parent pdg: ', parent_pdg)
-        
+        else: ##probably a meson
+            parent_pdg = final_states[parent]['pdgId'] # *** parent pdg ***
+            parent_pdg = parent_pdg.tolist()[0]
+            parent_true_length= np.linalg.norm(np.subtract(final_states[parent]['xyz_end'],final_states[parent]['xyz_start']))
+            if parent_true_length>3: continue
+            
+            print('mu start E: ', fs['E_start'])
+            print('mu length: ', np.linalg.norm(np.subtract(fs['xyz_end'],fs['xyz_start'])))
+            print('check parent pdg: ', parent_pdg)
+            print('parent start E: ',final_states[parent]['E_start'])
+            print('parent length [cm]: ', parent_true_length)
+            #check grandparent                                                     
+            grandparent_id = final_states[parent]['parentID']
+
+            if grandparent_id ==-1:
+                print('mu grandparent was a nutrino')
+                continue
+            else:
+               grandparent_mask = final_states['trackID']==grandparent_id
+               grandparent_pdg = final_states[grandparent_mask]['pdgId']
+               grandparent_pdg = grandparent_pdg.tolist()[0]
+               print('mu grandparent pdg:', grandparent_pdg)
+               grandparent_length = np.linalg.norm(np.subtract(final_states[grandparent_mask]['xyz_end'],final_states[grandparent_mask]['xyz_start']))
+               if grandparent_pdg == 2112:
+                   print('This is very likely a dirt background')
+                   print('neutron length: ', grandparent_length)
+               else:
+                   print('mu grandparent length: ', grandparent_length)
+                   if grandparent_length>3: continue
+                   print('need to check higher up in the family')
+                   if final_states[grand_parent_mask]['parentID'] == -1: continue
+                   grandparent_mask = final_states['trackID']= final_states[grand_parent_mask]['parentID']
+                   grandparent_pdg = final_states[grandparent_mask]['pdgId']
+                   grandparent_pdg = grandparent_pdg.tolist()[0]
+                   print('mu grandparent2 pdg:', grandparent_pdg)
+                   grandparent_length = np.linalg.norm(np.subtract(final_states[grandparent_mask]['xyz_end'],final_states[grandparent_mask]['xyz_start']))
+                   print('mu grandparent2 length: ', grandparent_length)
+
+                   if grandparent_length>3: continue
+                   else:
+                       print('still check higher up')
+
+
         track_id = fs['trackID']
         total_edep=0.; contained_edep=0.; total_length=0.; contained_length=0.
 
@@ -100,11 +131,11 @@ def dirt_muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg,
                 contained_edep=contained_edep,
                 total_length=total_length,
                 contained_length=contained_length,
-                true_mom=true_mom,
-                true_angle=true_angle,
-                true_energy=true_energy,
-                nu_energy=nu_energy,
-                q_sq = q_sq)
+                true_mom=truth_level_summ['lep_mom'],
+                true_angle= truth_level_summ['lep_ang'],
+                true_energy=truth_level_summ['Elep'],
+                nu_energy=truth_level_summ['Enu'],
+                q_sq = truth_level_summ['Q2'])
             
             ## end if
     return
