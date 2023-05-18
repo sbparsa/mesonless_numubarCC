@@ -101,6 +101,16 @@ def fiducialized_vertex(vert_pos):
 =True
     return flag
 
+def MINERvA_vertex(vert_pos):
+    flag=False; x_drift_flag=False; y_vertical_flag=False; z_beam_flag=False
+    for i in range(3):
+        for i_bounds, bounds in enumerate(MINERvA_bounds(i)):
+            if vert_pos[i]>bounds[0] and vert_pos[i]<bounds[1]:
+                if i==0: x_drift_flag=True; break
+                if i==1: y_vertical_flag=True
+                if i==2: z_beam_flag=True
+    if x_drift_flag==True and y_vertical_flag==True and z_beam_flag==True: flag=True
+    return flag
 
 
 def tpc_vertex(vert_pos):

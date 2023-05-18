@@ -3,7 +3,8 @@ import numpy as np
 import json
 
 neutral_pdg=[111] #, 22] #, 2112] # add K0, rho0, eta0?
-
+meson_pdg={111,211,-211,130,310,311,321,-321,221,331}
+nu_signal_pdg=-14
 
 ##### HDF5 FILE PARSING-------------------------------------
 
@@ -85,17 +86,22 @@ def signal_nu_pdg(ghdr, vert_id):
     else: return False
 
 
-
 def signal_cc(ghdr, vert_id):
     ghdr_vert_mask = ghdr['vertexID']==vert_id
     return ghdr[ghdr_vert_mask]['isCC'][0]
 
 
 
-def signal_pion_status(gstack, vert_id):
+def signal_meson_status(gstack, vert_id):
     gstack_vert_mask = gstack['vertexID']==vert_id
     gstack_pdg_set = set(gstack[gstack_vert_mask]['part_pdg'])
-    if len(pion_pdg.intersection(gstack_pdg_set))==0: return True
+    if len(meson_pdg.intersection(gstack_pdg_set))==0: return True
+    else: return False
+
+def wrong_sign_nu_pdg(ghdr, vert_id):
+    ghdr_vert_mask = ghdr['vertexID']==vert_id
+    ghdr_nu_interaction = ghdr[ghdr_vert_mask]['nu_pdg']
+    if ghdr_nu_interaction[0]== -1*nu_signal_pdg: return True
     else: return False
 
 
