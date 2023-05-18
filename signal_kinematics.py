@@ -7,7 +7,9 @@ import argparse
 import numpy as np
 import twoBytwo_defs
 import auxiliary
-import signal_characterization_and_plotting as sig_char_plot
+import signal_characterization as sig_char
+from plot_signal_muons import plot_muons
+from plot_signal_hadrons import plot_hadrons
 
 def main(sim_dir, input_type, file_limit):
 
@@ -68,20 +70,20 @@ def main(sim_dir, input_type, file_limit):
 
                 ##### REQUIRE: (A) nu_mu_bar, (B) CC, (C) NO pions present, (D) final state particle start point in FV
                 if nu_mu_bar==True and is_cc==True and mesonless==True and fv_particle_origin==True:
-                    sig_char_plot.muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon_dict)
-                    sig_char_plot.hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, hadron_dict)
-                    sig_char_plot.get_truth_dict(spill_id, vert_id, ghdr, gstack, traj, vert, seg, signal_dict)
+                    sig_char.muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon_dict)
+                    sig_char.hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, hadron_dict)
+                    sig_char.get_truth_dict(spill_id, vert_id, ghdr, gstack, traj, vert, seg, signal_dict)
                 elif nu_mu==True and is_cc==True and mesonless==True and fv_particle_origin==True:
-                    sig_char_plot.get_truth_dict(spill_id, vert_id, ghdr, gstack, traj, vert, seg, wrong_sign_bkg_dict)
+                    sig_char.get_truth_dict(spill_id, vert_id, ghdr, gstack, traj, vert, seg, wrong_sign_bkg_dict)
 
                 
-    sig_char_plot.plot_muons(muon_dict, scale_factor)
-    sig_char_plot.plot_hadrons(hadron_dict, scale_factor)
+    plot_muons(muon_dict, scale_factor)
+    plot_hadrons(hadron_dict, scale_factor)
 
     auxiliary.save_dict_to_json(signal_dict, "signal_dict", True)
     auxiliary.save_dict_to_json(wrong_sign_bkg_dict, "wrong_sign_bkg_dict", True)
-    auxiliary.save_dict_to_json(signal_dict, "muon_dict", True)
-    auxiliary.save_dict_to_json(wrong_sign_bkg_dict, "hadron_dict", True)
+    auxiliary.save_dict_to_json(muon_dict, "muon_dict", True)
+    #auxiliary.save_dict_to_json(hadron_dict, "hadron_dict", True) # TODO: Make Hadron Dict saveable
 
 
 
