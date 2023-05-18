@@ -6,6 +6,14 @@ neutral_pdg=[111] #, 22] #, 2112] # add K0, rho0, eta0?
 meson_pdg={111,211,-211,130,310,311,321,-321,221,331}
 nu_signal_pdg=-14
 
+hadron_pdg_dict ={2112:'n',
+                  2212:'p',
+                  3112:r'$\Sigma^-$',
+                  3122:r'$\Lambda$',
+                  3212:r'$\Sigma^0$',
+                  3222:r'$\Sigma^+$'} 
+
+
 ##### HDF5 FILE PARSING-------------------------------------
 
 
@@ -296,7 +304,6 @@ def fv_contained_length(pdg, trackID, traj, seg):
 def total_length(pdg, trackID, traj, seg):
     if pdg in neutral_pdg: return 0.
     else: return total_edep_charged_length(trackID, traj, seg)
-
 
 
 
