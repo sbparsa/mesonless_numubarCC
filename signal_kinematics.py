@@ -6,6 +6,7 @@ import json
 import argparse
 import numpy as np
 import twoBytwo_defs
+import auxiliary
 import signal_characterization_and_plotting as sig_char_plot
 
 nu_signal_pdg=-14
@@ -16,79 +17,10 @@ meson_pdg={111,211,-211,130,310,311,321,-321,221,331}
 (1) Dump muon dictionary into json file
 '''
 
-def print_keys_attributes(sim_h5):
-    print(sim_h5.keys())
-    print('GENIE HDR: ',sim_h5['genie_hdr'].dtype)
-    print('GENIE STACK: ',sim_h5['genie_stack'].dtype)
-    print('TRACKS: ', sim_h5['tracks'].dtype)
-    print('TRAJECTORIES', sim_h5['trajectories'].dtype)
-    print('VERTICES', sim_h5['vertices'].dtype)
-
-
-def get_spill_data(sim_h5, spill_id):
-    ### mask data if not spill under consideration
-    ghdr_spill_mask = sim_h5['genie_hdr'][:]['eventID']==spill_id
-    gstack_spill_mask = sim_h5['genie_stack'][:]['eventID']==spill_id
-    traj_spill_mask = sim_h5['trajectories'][:]['eventID']==spill_id
-    vert_spill_mask = sim_h5['vertices'][:]['eventID']==spill_id
-    seg_spill_mask = sim_h5['tracks'][:]['eventID']==spill_id
-
-    ### apply spill mask
-    ghdr = sim_h5['genie_hdr'][ghdr_spill_mask]
-    gstack = sim_h5['genie_stack'][gstack_spill_mask]
-    traj = sim_h5['trajectories'][traj_spill_mask]
-    vert = sim_h5['vertices'][vert_spill_mask]
-    seg = sim_h5['tracks'][seg_spill_mask]
-    
-    return ghdr, gstack, traj, vert, seg
-
-    
-def signal_nu_pdg(ghdr, vert_id):
-    ghdr_vert_mask = ghdr['vertexID']==vert_id
-    ghdr_nu_interaction = ghdr[ghdr_vert_mask]['nu_pdg']
-    if ghdr_nu_interaction[0]==nu_signal_pdg: return True
-    else: return False
-
 def wrong_sign_nu_pdg(ghdr, vert_id):
     ghdr_vert_mask = ghdr['vertexID']==vert_id
     ghdr_nu_interaction = ghdr[ghdr_vert_mask]['nu_pdg']
     if ghdr_nu_interaction[0]== -1*nu_signal_pdg: return True
-    else: return False
-    
-
-def tuple_key_to_string(d):
-    out={}
-    for key in d.keys():
-        string_key=""
-        max_length=len(key)
-        for i in range(max_length):
-            if i<len(key)-1: string_key+=str(key[i])+"-"
-            else: string_key+=str(key[i])
-        out[string_key]=d[key]
-    return out                    
-            
-
-
-def save_dict_to_json(d, name, if_tuple):
-    with open(name+".json", "w") as outfile:
-        if if_tuple==True:
-            updated_d = tuple_key_to_string(d)
-            json.dump(updated_d, outfile, indent=4)
-        else:
-            json.dump(d, outfile, indent=4)
-
-
-def signal_cc(ghdr, vert_id):
-    ghdr_vert_mask = ghdr['vertexID']==vert_id
-    return ghdr[ghdr_vert_mask]['isCC'][0]
-
-    
-
-def signal_meson_status(gstack, vert_id):
-    gstack_vert_mask = gstack['vertexID']==vert_id
-    gstack_pdg_set = set(gstack[gstack_vert_mask]['part_pdg'])
-    #print("Event PDG Stack:", gstack_pdg_set)
-    if len(meson_pdg.intersection(gstack_pdg_set))==0: return True
     else: return False
 
 
@@ -128,7 +60,7 @@ def main(sim_dir, input_type, file_limit):
         unique_spill = np.unique(sim_h5['trajectories']['eventID'])
         for spill_id in unique_spill:
 
-            ghdr, gstack, traj, vert, seg = get_spill_data(sim_h5, spill_id)
+            ghdr, gstack, traj, vert, seg = auxiliary.get_spill_data(sim_h5, spill_id, input_type)
 
             ### partition by vertex ID within beam spill
             for v_i in range(len(vert['vertexID'])):
@@ -143,11 +75,11 @@ def main(sim_dir, input_type, file_limit):
 
                 vert_id = vert['vertexID'][v_i]
 
-                nu_mu_bar = signal_nu_pdg(ghdr, vert_id)
-                nu_mu = wrong_sign_nu_pdg(ghdr, vert_id)
-                is_cc = signal_cc(ghdr, vert_id)
-                mesonless = signal_meson_status(gstack, vert_id)
+                nu_mu_bar = auxiliary.signal_nu_pdg(ghdr, vert_id)
+                is_cc = auxiliary.signal_cc(ghdr, vert_id)
+                pionless = auxiliary.signal_pion_status(gstack, vert_id)
                 fv_particle_origin=twoBytwo_defs.fiducialized_particle_origin(traj, vert_id)
+                nu_mu = wrong_sign_nu_pdg(ghdr, vert_id)
 
                 ##### REQUIRE: (A) nu_mu_bar, (B) CC, (C) NO pions present, (D) final state particle start point in FV
                 if nu_mu_bar==True and is_cc==True and mesonless==True and fv_particle_origin==True:
