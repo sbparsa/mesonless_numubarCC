@@ -9,21 +9,6 @@ import twoBytwo_defs
 import auxiliary
 import signal_characterization_and_plotting as sig_char_plot
 
-nu_signal_pdg=-14
-meson_pdg={111,211,-211,130,310,311,321,-321,221,331}
-
-
-'''TO DO:
-(1) Dump muon dictionary into json file
-'''
-
-def wrong_sign_nu_pdg(ghdr, vert_id):
-    ghdr_vert_mask = ghdr['vertexID']==vert_id
-    ghdr_nu_interaction = ghdr[ghdr_vert_mask]['nu_pdg']
-    if ghdr_nu_interaction[0]== -1*nu_signal_pdg: return True
-    else: return False
-
-
 def main(sim_dir, input_type, file_limit):
 
     test_count = 0
@@ -76,10 +61,10 @@ def main(sim_dir, input_type, file_limit):
                 vert_id = vert['vertexID'][v_i]
 
                 nu_mu_bar = auxiliary.signal_nu_pdg(ghdr, vert_id)
+                nu_mu = auxiliary.wrong_sign_nu_pdg(ghdr, vert_id)
                 is_cc = auxiliary.signal_cc(ghdr, vert_id)
-                pionless = auxiliary.signal_pion_status(gstack, vert_id)
+                mesonless = auxiliary.signal_meson_status(gstack, vert_id)
                 fv_particle_origin=twoBytwo_defs.fiducialized_particle_origin(traj, vert_id)
-                nu_mu = wrong_sign_nu_pdg(ghdr, vert_id)
 
                 ##### REQUIRE: (A) nu_mu_bar, (B) CC, (C) NO pions present, (D) final state particle start point in FV
                 if nu_mu_bar==True and is_cc==True and mesonless==True and fv_particle_origin==True:
@@ -93,8 +78,10 @@ def main(sim_dir, input_type, file_limit):
     sig_char_plot.plot_muons(muon_dict, scale_factor)
     sig_char_plot.plot_hadrons(hadron_dict, scale_factor)
 
-    save_dict_to_json(signal_dict, "signal_dict", True)
-    save_dict_to_json(wrong_sign_bkg_dict, "wrong_sign_bkg_dict", True)
+    auxiliary.save_dict_to_json(signal_dict, "signal_dict", True)
+    auxiliary.save_dict_to_json(wrong_sign_bkg_dict, "wrong_sign_bkg_dict", True)
+    auxiliary.save_dict_to_json(signal_dict, "muon_dict", True)
+    auxiliary.save_dict_to_json(wrong_sign_bkg_dict, "hadron_dict", True)
 
 
 

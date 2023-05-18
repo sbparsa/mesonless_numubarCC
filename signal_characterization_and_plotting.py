@@ -16,25 +16,14 @@ def get_truth_dict(spill_id, vert_id, ghdr, gstack, traj, vert, seg, signal_dict
     ghdr_vert_mask = ghdr['vertexID']==vert_id
     truth_level_summ = ghdr[ghdr_vert_mask]
 
-    # Save truth-level outgoing muon momentum
-    mom = truth_level_summ['lep_mom']
-
-    # Save truth-level muon angle with beam
-    ang = truth_level_summ['lep_ang'] *np.pi / 180.
-
-    # Save truth-level neutrino energy
-    nu_energy = truth_level_summ['Enu']
-
-    # Save truth-level interaction 4-momentum squared
-    q2 = truth_level_summ['Q2']
-        
-    # Save truth-level vertex information
-    vtx = truth_level_summ['vertex']
-    #print("Vertex:", vtx)
+    mom = truth_level_summ['lep_mom'] # Save truth-level outgoing muon momentum
+    ang = truth_level_summ['lep_ang'] *np.pi / 180. # Save truth-level muon angle with beam
+    nu_energy = truth_level_summ['Enu'] # Save truth-level neutrino energy
+    q2 = truth_level_summ['Q2'] # Save truth-level interaction 4-momentum squared
+    vtx = truth_level_summ['vertex'] # Save truth-level vertex information
     vtx_x = vtx[0][0]
     vtx_y = vtx[0][1]
     vtx_z = vtx[0][2]
-
                                                                                                                                           
     signal_dict[(spill_id,vert_id)]=dict(
         nu_energy=float(nu_energy),
@@ -54,20 +43,10 @@ def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon
     ghdr_vert_mask = ghdr['vertexID']==vert_id
     truth_level_summ = ghdr[ghdr_vert_mask]
 
-    # Save truth-level outgoing muon momentum
-    true_mom = truth_level_summ['lep_mom']
-
-    # Save truth-level muon angle with beam
-    true_angle = truth_level_summ['lep_ang']
-
-    # Save truth-level outgoing muon energy
-    true_energy = truth_level_summ['Elep']
-
-    # Save truth-level neutrino energy
-    nu_energy = truth_level_summ['Enu']
-
-    # Save truth-level interaction 4-momentum squared
-    q_sq = truth_level_summ['Q2']
+    mom = truth_level_summ['lep_mom'] # Save truth-level outgoing muon momentum
+    ang = truth_level_summ['lep_ang'] *np.pi / 180. # Save truth-level muon angle with beam
+    nu_energy = truth_level_summ['Enu'] # Save truth-level neutrino energy
+    q2 = truth_level_summ['Q2'] # Save truth-level interaction 4-momentum squared
 
     total_edep=0.; contained_edep=0.; total_length=0.; contained_length=0.
     #print("PDG IDs of F.S. Particles:", final_states['pdgId'])
@@ -147,16 +126,15 @@ def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon
      #                                                                                                                                     
     muon_dict[(spill_id,vert_id)]=dict(
         pdg=int(pdg),
-        parent_pdg=parent_pdg,
-        total_edep=total_edep,
-        contained_edep=contained_edep,
-        total_length=total_length,
-        contained_length=contained_length,#end_pt_loc = end_pt_loc,
-        true_mom=true_mom, 
-        true_angle=true_angle,
-        true_energy=true_energy,
-        nu_energy=nu_energy,
-        q_sq = q_sq)
+        parent_pdg=int(parent_pdg),
+        total_edep=float(total_edep),
+        contained_edep=float(contained_edep),
+        total_length=float(total_length),
+        contained_length=float(contained_length),#end_pt_loc = end_pt_loc,
+        mom=float(mom), 
+        ang=float(ang),
+        nu_energy=float(nu_energy),
+        q2 = float(q2))
     return
 
 
@@ -274,7 +252,7 @@ def plot_muons(d, scale_factor, sig_bkg = 0):
     
     # PLOT: truth-level outgoing muon (lepton) angle 
     fig2, ax2 = plt.subplots(figsize=(6,4))
-    data2 = np.cos((np.pi / 180.)*np.array([d[key]['true_angle'] for key in d.keys()]))
+    data2 = np.cos(np.array([d[key]['ang'] for key in d.keys()]))
     counts2, bins2 =np.histogram(data2, bins=np.linspace(0.75,1,51))
     ax2.hist(bins2[:-1], bins=bins2, weights = counts2*scale_factor, histtype='step')
     ax2.set_xlabel(r"Cosine of Outgoing Muon Angle with Beam Direction")
@@ -283,7 +261,7 @@ def plot_muons(d, scale_factor, sig_bkg = 0):
 
     # PLOT: truth-level outgoing muon (lepton) momentum 
     fig3, ax3 = plt.subplots(figsize=(6,4))
-    data3 = np.array([d[key]['true_mom'] for key in d.keys()])/1000.
+    data3 = np.array([d[key]['mom'] for key in d.keys()])/1000.
     counts3, bins3 =np.histogram(data3, bins=np.linspace(0,30,31))
     ax3.hist(bins3[:-1], bins=bins3, weights = counts3*scale_factor, histtype='step')
     ax3.set_xlabel(r"Outgoing Muon Momentum [GeV]")
@@ -292,7 +270,7 @@ def plot_muons(d, scale_factor, sig_bkg = 0):
 
     # PLOT: truth-level 4-momentum squared of interaction
     fig4, ax4 = plt.subplots(figsize=(6,4))
-    data4 = np.array([d[key]['q_sq'] for key in d.keys()]) / 1000000.
+    data4 = np.array([d[key]['q2'] for key in d.keys()]) / 1000000.
     counts4, bins4 =np.histogram(data4, bins=np.linspace(0,4,41))
     ax4.hist(bins4[:-1], bins=bins4, weights = counts4*scale_factor, histtype='step')
     ax4.set_xlabel(r"4-Momentum Transfer Squared [GeV$^2$]")
