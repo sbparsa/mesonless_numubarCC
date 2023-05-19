@@ -46,6 +46,17 @@ def pion_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, pion
     traj_vert_mask = traj['vertexID']==vert_id
     final_states = traj[traj_vert_mask]
 
+    ghdr_mask=ghdr['vertexID']==vert_id
+    nu_energy=ghdr[ghdr_mask]['Enu']
+    q2=ghdr[ghdr_mask]['Q2']
+    mom=ghdr[ghdr_mask]['lep_mom']
+    ang=ghdr[ghdr_mask]['lep_ang']
+    
+    vtx_mask = vert['vertexID']==vert_id
+    vtx_x=vert[vtx_mask]['x_vert']
+    vtx_y=vert[vtx_mask]['y_vert']
+    vtx_z=vert[vtx_mask]['z_vert']
+
     track_ids_seen=set()
     for fs in final_states:
         pdg = fs['pdgId']
@@ -74,7 +85,15 @@ def pion_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, pion
             total_edep=float(total_edep),
             contained_edep=float(contained_edep),
             total_length=float(total_length),
-            contained_length=float(contained_length))
+            contained_length=float(contained_length),
+            nu_energy=float(nu_energy),
+            q2=float(q2),
+            mom=float(mom),
+            ang=float(ang),
+            vtx_x=float(vtx_x),
+            vtx_y=float(vtx_y),
+            vtx_z=float(vtx_z))
+        
     return
 
 
