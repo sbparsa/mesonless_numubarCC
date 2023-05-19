@@ -3,7 +3,7 @@ import numpy as np
 import json
 
 neutral_pdg=[111] #, 22] #, 2112] # add K0, rho0, eta0?
-meson_pdg={111,211,-211,130,310,311,321,-321,221,331}
+meson_pdg={111,211,-211,130,310,311,321,-321,221,331,421,411,-411}
 nu_signal_pdg=-14
 
 hadron_pdg_dict ={2112:'n',
@@ -11,7 +11,11 @@ hadron_pdg_dict ={2112:'n',
                   3112:r'$\Sigma^-$',
                   3122:r'$\Lambda$',
                   3212:r'$\Sigma^0$',
-                  3222:r'$\Sigma^+$'} 
+                  3222:r'$\Sigma^+$', 
+                  4212:r'$\Sigma_c^+$',
+                  4222:r'$\Sigma_c^{++}$',
+                  4112:r'$\Sigma_c^0$', 
+                  4122:r'$\Lambda_c^+$'} 
 
 
 ##### HDF5 FILE PARSING-------------------------------------
@@ -162,6 +166,26 @@ def same_pdg_connected_trajectories(track_pdg, track_id, vertex_assoc_traj,\
 
     return trackid_set
     
+
+def is_primary_particle(trackid_set, vertex_assoc_traj,traj, ghdr, wrong_sign):
+    is_prim = False
+
+    for tid in trackid_set:
+
+        particle_mask = vertex_assoc_traj['trackID'] == tid
+        parent_pdg = find_parent_pdg(vertex_assoc_traj[particle_mask]['parentID'],
+                                     vertex_assoc_traj[particle_mask]['vertexID'],
+                                     traj, ghdr)
+        #print("Parent PDG:", parent_pdg)
+        if wrong_sign==False and parent_pdg==-14:
+            is_prim = True
+            break
+        if wrong_sign==True and parent_pdg==14:
+            is_prim = True
+            break
+        else: continue
+
+    return is_prim
 
             
 ##### FIDUCIAL VOLUME/ TOTAL VOLUME ENERGY DEPOSITION -------

@@ -192,12 +192,10 @@ def particle_end_loc(particle_start, particle_end):
         x_MINERvA = MINERvA_bounds(0)[0]
         y_MINERvA = MINERvA_bounds(1)[0]
         z_MINERvA_down = MINERvA_bounds(2)[1]
-        x_tpc = tpc_bounds(0)
-        y_tpc = tpc_bounds(1)
-        z_tpc = tpc_bounds(2)
+        z_tpc_down = tpc_bounds(2)[1]
 
         # Check whether endpoint Z is between 2x2 and MINERvA Downstream
-        if particle_end[2]<z_MINERvA_down[0] and particle_end[2]>z_tpc[1]:
+        if particle_end[2]<z_MINERvA_down[0] and particle_end[2]>z_tpc_down[1]:
                 end_pt_loc = 'p'
 
         # Check leaving back or side of MINERvA

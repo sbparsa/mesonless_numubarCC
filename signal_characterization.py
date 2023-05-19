@@ -36,7 +36,7 @@ def get_truth_dict(spill_id, vert_id, ghdr, gstack, traj, vert, seg, signal_dict
         vtx_z = float(vtx_z))
     return
         
-def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon_dict):
+def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon_dict, wrong_sign):
 
     traj_vert_mask = traj['vertexID']==vert_id
     final_states = traj[traj_vert_mask]
@@ -54,33 +54,30 @@ def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon
     gstack_vert_mask = gstack['vertexID']==vert_id
     gstack_pdg_set = set(gstack[gstack_vert_mask]['part_pdg'])
     #print("Event PDG Stack:", gstack_pdg_set)
+    exclude_track_ids = set()
     for fs in final_states:
 
-        if fs['pdgId'] != -13: continue
-
+        if wrong_sign==False and (fs['pdgId'] != -13): continue
+        elif wrong_sign==True and (fs['pdgId'] != 13): continue
         #print("Particle is muon.")
 
         pdg = fs['pdgId'] # *** pdg ***     
         parent_pdg = auxiliary.find_parent_pdg(fs['parentID'],vert_id, traj, ghdr)# *** parent pdg ***
         
         track_id = fs['trackID']
-        seg_id_mask = seg['trackID']==track_id
-        total_edep += sum(np.array(seg[seg_id_mask]['dE'])) # *** total visible energy ***
+        if track_id in exclude_track_ids: continue
+        track_id_set = auxiliary.same_pdg_connected_trajectories(pdg, track_id, final_states, traj, ghdr)
+        exclude_track_ids.update(track_id_set)
+        is_primary = auxiliary.is_primary_particle(track_id_set, final_states, traj, ghdr, wrong_sign)
+        #print("Excluded Track IDs:", exclude_track_ids)
+        if is_primary == False: continue
+        for tid in track_id_set:
 
-        for sg in seg[seg_id_mask]:
-            total_length+=np.sqrt((sg['x_start']-sg['x_end'])**2+
-                                  (sg['y_start']-sg['y_end'])**2+
-                                  (sg['z_start']-sg['z_end'])**2) # *** total length ***                                                                                                              
-        
-        # Save contained energy and length of muon track
-        for sg in seg[seg_id_mask]:
-            if twoBytwo_defs.fiducialized_vertex([(sg['x_start']+sg['x_end'])/2.,
-                                                  (sg['y_start']+sg['y_end'])/2.,
-                                                  (sg['z_start']+sg['z_end'])/2.] ):
-                contained_edep+=sg['dE'] # *** contained visible energy ***                                                                                                                           
-                contained_length+=np.sqrt((sg['x_start']-sg['x_end'])**2+
-                                              (sg['y_start']-sg['y_end'])**2+
-                                              (sg['z_start']-sg['z_end'])**2) # *** contained length ***
+            total_edep += auxiliary.total_edep_charged_e(tid,traj,seg) # *** total visible energy ***
+            contained_edep+= auxiliary.fv_edep_charged_e(tid, traj, seg)
+            
+            contained_length+=auxiliary.fv_edep_charged_length(tid, traj, seg)
+            total_length+=auxiliary.total_edep_charged_length(tid, traj, seg)
 
 
      #   # *** Characterize Muon Endpoint/Containment ***
@@ -94,7 +91,7 @@ def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon
         total_edep=float(total_edep),
         contained_edep=float(contained_edep),
         total_length=float(total_length),
-        contained_length=float(contained_length),#end_pt_loc = end_pt_loc,
+        contained_length=float(contained_length),
         mom=float(mom), 
         ang=float(ang),
         nu_energy=float(nu_energy),
@@ -122,7 +119,6 @@ def hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, ha
 
     gstack_vert_fs_hadrons = [fsp for fsp in gstack_vert_fs if abs(fsp) not in leptons_abs_pdg and fsp != 22] # Exclude f.s. leptons and photons 
     gstack_vert_fs_pdg_set = set(gstack_vert_fs_hadrons) # Get f.s. particle PDG IDs in set
-    #gstack_vert_fs_hadrons = gstack_vert_fs[gstack_lep_phot_mask]
 
     #print("Event PDG Stack:", gstack_vert['part_pdg'])
     #print("Final State Hadrons:", gstack_vert_fs_hadrons)
@@ -134,6 +130,7 @@ def hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, ha
     p_mult = 0
     other_had_mult = 0
 
+    # Get separate hadron multiplicities
     for had in range(hadron_mult):
 
         if gstack_vert_fs_hadrons[had] == 2112:
@@ -144,7 +141,8 @@ def hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, ha
             other_had_mult+=1
 
     ### GET: Total and contained energy deposits of hadrons
-    total_edep=0.; contained_edep=0.; total_length=0.; contained_length=0.
+    total_edep=0.; contained_edep=0.; total_length=0.; contained_length=0.; max_proton_contained_length=0.; max_proton_total_length=0.
+    exclude_track_ids = set()
     for fs in final_states:
 
         if abs(fs['pdgId']) in leptons_abs_pdg: continue # No leptons
@@ -152,41 +150,38 @@ def hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, ha
         if fs['pdgId'] == 22: continue # No photons
         
         track_id = fs['trackID']
-        seg_id_mask = seg['trackID']==track_id
-        total_edep += sum(np.array(seg[seg_id_mask]['dE'])) # *** total visible energy ***
-        #print('List of visible hadron energy components:', np.array(seg[seg_id_mask]['dE']))
+        if track_id in exclude_track_ids: continue
+        track_id_set = auxiliary.same_pdg_connected_trajectories(fs['pdgId'], track_id, final_states, traj, ghdr)
+        exclude_track_ids.update(track_id_set)
+        #print("Excluded Track IDs:", exclude_track_ids)
+        proton_contained_length = 0.; proton_total_length=0.
+        for tid in track_id_set:
 
-        for sg in seg[seg_id_mask]:
-            total_length+=np.sqrt((sg['x_start']-sg['x_end'])**2+
-                                  (sg['y_start']-sg['y_end'])**2+
-                                  (sg['z_start']-sg['z_end'])**2) # *** total length ***                                                                                                              
-        
-        # Save contained energy and length of hadrons
-        #print('Initial Contained Edep:', contained_edep)
-        for sg in seg[seg_id_mask]:
-            if twoBytwo_defs.fiducialized_vertex([(sg['x_start']+sg['x_end'])/2.,
-                                                  (sg['y_start']+sg['y_end'])/2.,
-                                                  (sg['z_start']+sg['z_end'])/2.] ):
-                contained_edep+=sg['dE'] # *** contained visible energy ***  
-                #print("Contained Hadron Energy component:", sg['dE'])                                                                                                                         
-                contained_length+=np.sqrt((sg['x_start']-sg['x_end'])**2+
-                                              (sg['y_start']-sg['y_end'])**2+
-                                              (sg['z_start']-sg['z_end'])**2) # *** contained length ***
+            total_edep += auxiliary.total_edep_charged_e(tid,traj,seg) # *** total visible energy ***
+            contained_edep+= auxiliary.fv_edep_charged_e(tid, traj, seg)
+            
+            if fs['pdgId'] == 2212:
+                proton_contained_length+=auxiliary.fv_edep_charged_length(tid, traj, seg)
+                proton_total_length+=auxiliary.total_edep_charged_length(tid, traj, seg)
+
+        if proton_contained_length > max_proton_contained_length:
+            max_proton_contained_length = proton_contained_length
+            max_proton_total_length = proton_total_length
     
     #print('Total Hadron Edep calculated:', total_edep)          
     #print('Contained Hadron Edep calculated:', contained_edep)
             
-    hadron_dict[(spill_id,vert_id, track_id)]=dict(
-        hadron_mult = hadron_mult,
-        neutron_mult = n_mult,
-        proton_mult = p_mult,
-        other_had_mult = other_had_mult,
+    hadron_dict[(spill_id,vert_id)]=dict(
+        hadron_mult = int(hadron_mult),
+        neutron_mult = int(n_mult),
+        proton_mult = int(p_mult),
+        other_had_mult = int(other_had_mult),
         hadron_pdg = gstack_vert_fs_hadrons,
         hadron_pdg_set = gstack_vert_fs_pdg_set,
-        total_edep=total_edep,
-        contained_edep=contained_edep,
-        total_length=total_length,
-        contained_length=contained_length)
+        total_edep=float(total_edep),
+        contained_edep=float(contained_edep),
+        max_p_total_length=float(max_proton_total_length),
+        max_p_contained_length=float(max_proton_contained_length))
     return
                                                  
 
