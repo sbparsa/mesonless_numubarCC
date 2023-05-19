@@ -21,8 +21,11 @@ def plot_muons(d, scale_factor, sig_bkg = 0):
         sample_type = 'dirt_bkg'
     elif sig_bkg == 2:
         sample_type = 'beam_bkg'
+    elif sig_bkg == 3:
+        sample_type = 'wrong_sign_bkg'
     else: 
         return "Error: plot_muons function given undefined signal/background definition"
+    
         
                                                   
     # PLOT: total visible energy + contained visible energy
@@ -40,6 +43,7 @@ def plot_muons(d, scale_factor, sig_bkg = 0):
     ax0.set_yscale('log')
     ax0.grid(True)
     plt.savefig(sample_type+"_events_muon_visible_energy.png")
+    plt.close(fig0)
 
     # PLOT: muon energy containment fraction
     fig1, ax1 = plt.subplots(figsize=(6,4))
@@ -49,7 +53,8 @@ def plot_muons(d, scale_factor, sig_bkg = 0):
     ax1.set_xlabel('Visible Muon Energy Containment Fraction')
     ax1.set_ylabel('Count / 0.05')
     ax1.grid(True)       
-    plt.savefig(sample_type+"_events_muon_containment_fraction.png")    
+    plt.savefig(sample_type+"_events_muon_containment_fraction.png")
+    plt.close(fig1)    
     
     # PLOT: truth-level outgoing muon (lepton) angle 
     fig2, ax2 = plt.subplots(figsize=(6,4))
@@ -58,7 +63,8 @@ def plot_muons(d, scale_factor, sig_bkg = 0):
     ax2.hist(bins2[:-1], bins=bins2, weights = counts2*scale_factor, histtype='step')
     ax2.set_xlabel(r"Outgoing Muon Angle with Beam Direction")
     ax2.set_ylabel("Count / 0.02 Rad")
-    plt.savefig(sample_type+"_events_outgoing_muon_angle_truth.png")   
+    plt.savefig(sample_type+"_events_outgoing_muon_angle_truth.png")
+    plt.close(fig2)   
 
     # PLOT: truth-level outgoing muon (lepton) momentum 
     fig3, ax3 = plt.subplots(figsize=(6,4))
@@ -67,7 +73,8 @@ def plot_muons(d, scale_factor, sig_bkg = 0):
     ax3.hist(bins3[:-1], bins=bins3, weights = counts3*scale_factor, histtype='step')
     ax3.set_xlabel(r"Outgoing Muon Momentum [GeV]")
     ax3.set_ylabel("Count / GeV")
-    plt.savefig(sample_type+"_events_outgoing_muon_momentum_truth.png")  
+    plt.savefig(sample_type+"_events_outgoing_muon_momentum_truth.png")
+    plt.close(fig3)  
 
     # PLOT: truth-level 4-momentum squared of interaction
     fig4, ax4 = plt.subplots(figsize=(6,4))
@@ -76,7 +83,8 @@ def plot_muons(d, scale_factor, sig_bkg = 0):
     ax4.hist(bins4[:-1], bins=bins4, weights = counts4*scale_factor, histtype='step')
     ax4.set_xlabel(r"4-Momentum Transfer Squared [GeV$^2$]")
     ax4.set_ylabel(r"Count / 0.1 GeV$^2$") 
-    plt.savefig(sample_type+"_events_qsq_truth.png")  
+    plt.savefig(sample_type+"_events_qsq_truth.png")
+    plt.close(fig4)  
 
     # PLOT: truth-level neutrino energy of interaction
     fig5, ax5 = plt.subplots(figsize=(6,4))
@@ -85,7 +93,8 @@ def plot_muons(d, scale_factor, sig_bkg = 0):
     ax5.hist(bins5[:-1], bins=bins5, weights = counts5*scale_factor, histtype='step')
     ax5.set_xlabel(r"Incident Neutrino Energy [GeV]")
     ax5.set_ylabel("Count / GeV") 
-    plt.savefig(sample_type+"_events_nu_energy_truth.png")      
+    plt.savefig(sample_type+"_events_nu_energy_truth.png")
+    plt.close(fig5)      
 
     # PLOT: truth-level neutrino energy of interaction STACKED HIST BY END_PT_LOC
     loc_labels = [twoBytwo_defs.particle_end_loc_dict[k] for k in twoBytwo_defs.particle_end_loc_dict.keys()]
@@ -139,7 +148,8 @@ def plot_muons(d, scale_factor, sig_bkg = 0):
     ax6.set_ylabel("Count / GeV") 
     ax6.legend(loc='upper right')
     ax6.set_title('Signal Event Neutrino Energy Spectrum by Muon Track End Behavior')
-    plt.savefig(sample_type+"_events_nu_energy_truth_stacked_by_muon_end_loc.png")   
+    plt.savefig(sample_type+"_events_nu_energy_truth_stacked_by_muon_end_loc.png")
+    plt.close(fig6)   
 
     fig7, ax7 = plt.subplots(figsize=(9,6))
     bins7 = np.linspace(0,5,51)
@@ -155,7 +165,8 @@ def plot_muons(d, scale_factor, sig_bkg = 0):
     ax7.set_ylabel(r"Count / 0.1 GeV$^2$") 
     ax7.set_xlabel(r"4-Momentum Transfer Squared [GeV$^2$]")
     ax7.set_title(r'Signal Event Q$^2$ by Muon Track End Behavior')
-    plt.savefig(sample_type+"_events_qsq_truth_stacked_by_muon_end_loc.png")  
+    plt.savefig(sample_type+"_events_qsq_truth_stacked_by_muon_end_loc.png") 
+    plt.close(fig7) 
 
     fig8, ax8 = plt.subplots(figsize=(9,6))
     bins8 = np.linspace(-0.45,0.75,61)
@@ -171,7 +182,8 @@ def plot_muons(d, scale_factor, sig_bkg = 0):
     ax8.set_title('Signal Event Outgoing Muon Angle by Muon Track End Behavior')
     ax8.set_xlabel(r"Outgoing Muon Angle with Beam Direction")
     ax8.set_ylabel("Count / 0.02 Rad")
-    plt.savefig(sample_type+"_events_muon_angle_truth_stacked_by_muon_end_loc.png")  
+    plt.savefig(sample_type+"_events_muon_angle_truth_stacked_by_muon_end_loc.png") 
+    plt.close(fig8) 
 
     fig9, ax9 = plt.subplots(figsize=(9,6))
     bins9 = np.linspace(0,15,16)
@@ -187,4 +199,5 @@ def plot_muons(d, scale_factor, sig_bkg = 0):
     ax9.set_title('Signal Event Outgoing Muon Momentum by Muon Track End Behavior')
     ax9.set_xlabel(r"Outgoing Muon Momentum [GeV]")
     ax9.set_ylabel("Count / GeV")
-    plt.savefig(sample_type+"_events_outgoing_muon_momentum_truth_stacked_by_muon_end_loc.png")  
+    plt.savefig(sample_type+"_events_outgoing_muon_momentum_truth_stacked_by_muon_end_loc.png")
+    plt.close(fig9)  
