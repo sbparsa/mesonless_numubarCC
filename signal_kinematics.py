@@ -7,7 +7,9 @@ import argparse
 import numpy as np
 import twoBytwo_defs
 import auxiliary
-import signal_characterization_and_plotting as sig_char_plot
+import signal_characterization as sig_char
+from plot_signal_muons import plot_muons
+from plot_signal_hadrons import plot_hadrons
 
 def main(sim_dir, input_type, file_limit):
 
@@ -21,6 +23,11 @@ def main(sim_dir, input_type, file_limit):
 
     muon_dict = dict() # Initialize muon dictionary
     hadron_dict = dict() # Initialize hadron dictionary
+
+    ws_muon_dict = dict() # Initialize wrong sign muon dictionary
+    ws_hadron_dict = dict() # Initialize wrong sign hadron dictionary
+    
+    # Dictionaries for combining with other background explorations
     signal_dict = dict() # Initialize dictionary for signal muons for full comparison
     wrong_sign_bkg_dict = dict() # Initialize dictionary for wrong sign bkg muons for full comparison
     
@@ -68,21 +75,34 @@ def main(sim_dir, input_type, file_limit):
 
                 ##### REQUIRE: (A) nu_mu_bar, (B) CC, (C) NO pions present, (D) final state particle start point in FV
                 if nu_mu_bar==True and is_cc==True and mesonless==True and fv_particle_origin==True:
-                    sig_char_plot.muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon_dict)
-                    sig_char_plot.hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, hadron_dict)
-                    sig_char_plot.get_truth_dict(spill_id, vert_id, ghdr, gstack, traj, vert, seg, signal_dict)
+                    sig_char.muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon_dict, wrong_sign=False)
+                    sig_char.hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, hadron_dict)
+                    sig_char.get_truth_dict(spill_id, vert_id, ghdr, gstack, traj, vert, seg, signal_dict)
                 elif nu_mu==True and is_cc==True and mesonless==True and fv_particle_origin==True:
-                    sig_char_plot.get_truth_dict(spill_id, vert_id, ghdr, gstack, traj, vert, seg, wrong_sign_bkg_dict)
+                    sig_char.muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, ws_muon_dict, wrong_sign=True)
+                    sig_char.hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, ws_hadron_dict)
+                    sig_char.get_truth_dict(spill_id, vert_id, ghdr, gstack, traj, vert, seg, wrong_sign_bkg_dict)
 
-                
-    sig_char_plot.plot_muons(muon_dict, scale_factor)
-    sig_char_plot.plot_hadrons(hadron_dict, scale_factor)
+    # PLOT: Signal Event Info      
+    plot_muons(muon_dict, scale_factor, sig_bkg = 0)
+    plot_hadrons(hadron_dict, scale_factor, sig_bkg = 0)
+
+    # PLOT: Wrong Sign Background Event Info   
+    plot_muons(ws_muon_dict, scale_factor, sig_bkg = 3)
+    plot_hadrons(ws_hadron_dict, scale_factor, sig_bkg = 3)
 
     auxiliary.save_dict_to_json(signal_dict, "signal_dict", True)
     auxiliary.save_dict_to_json(wrong_sign_bkg_dict, "wrong_sign_bkg_dict", True)
-    auxiliary.save_dict_to_json(signal_dict, "muon_dict", True)
-    auxiliary.save_dict_to_json(wrong_sign_bkg_dict, "hadron_dict", True)
+    auxiliary.save_dict_to_json(muon_dict, "muon_dict", True)
+    #auxiliary.save_dict_to_json(hadron_dict, "hadron_dict", True) # TODO: Make Hadron Dict saveable
 
+    signal_count = len(signal_dict)*scale_factor
+    wrong_sign_bkg_count = len(wrong_sign_bkg_dict)*scale_factor
+    outfile = open('signal_wrong_sign_bkg_event_counts.txt', "w")
+    outfile.writelines(["Signal Events (scaled to 2.5e19 POT): "+str(signal_count)+"\n", \
+                        "Wrong Sign Background Events (scaled to 2.5e19 POT): "+str(wrong_sign_bkg_count)+"\n", \
+                        "Number of files used to get count: "+str(file_limit)+"\n"])
+    outfile.close()
 
 
 if __name__=='__main__':

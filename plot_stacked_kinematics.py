@@ -14,13 +14,17 @@ def plot_stacked_histo(signal, signal_factor, wrong_sign, wrong_sign_factor, \
     fig, ax = plt.subplots(figsize=(6,6))
 
     s = [signal[key][metric] for key in signal.keys()]
-    s_weight = [signal_factor]*len(s)
     w = [wrong_sign[key][metric] for key in wrong_sign.keys()]
+    if metric=='q2':
+        s = [signal[key][metric]/1e6 for key in signal.keys()]
+        w = [wrong_sign[key][metric]/1e6 for key in wrong_sign.keys()]
+        
+    s_weight = [signal_factor]*len(s)
     w_weight = [wrong_sign_factor]*len(w)
 
-    ax.hist(s, bins=bins, histtype='bar', stacked=True, \
+    ax.hist(s, bins=bins, weights=s_weight, stacked=True, \
             label=r'mesonless $\bar{\nu}_\mu$ CC')
-    ax.hist(w, bins=bins, histtype='bar', stacked=True, \
+    ax.hist(w, bins=bins, weights=w_weight,  stacked=True, \
             label=r'mesonless $\nu_\mu$ CC')
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
@@ -45,11 +49,11 @@ def main(signal, n_signal, wrong_sign, n_wrong_sign):
                        r'$\nu$ Energy [MeV]', r'$\nu$ Interactions / 200 MeV',\
                        'stacked_nu_energy', 'upper right')
 
-#    plot_stacked_histo(signal_dict, signal_sf, \
-#                       wrong_sign_dict, wrong_sign_sf, \
-#                       'q2', np.linspace(0,1e4,51), \
-#                       r'$Q^2$ [MeV]', r'$\nu$ Interactions / 200 MeV',\
-#                       'stacked_q2', 'upper right')
+    plot_stacked_histo(signal_dict, signal_sf, \
+                       wrong_sign_dict, wrong_sign_sf, \
+                       'q2', np.linspace(0,10,51), \
+                       r'$Q^2$ [GeV$^2$]', r'$\nu$ Interactions / 200 MeV',\
+                       'stacked_q2', 'upper right')
 
     plot_stacked_histo(signal_dict, signal_sf, \
                        wrong_sign_dict, wrong_sign_sf, \
@@ -91,5 +95,9 @@ if __name__=='__main__':
                         type=str, help='''wrong sign background JSON''')
     parser.add_argument('-nw','--n_wrong_sign', default=50, type=int, \
                         help='''number of files processed for wrong sign background JSON''')
+    parser.add_argument('-d','--dirt', default='dirt_bkg_dict.json', \
+                        type=str, help='''dirt background JSON''')
+    parser.add_argument('-nd','--n_dirt', default=1000, type=int, \
+                        help='''number of files processed for dirt background JSON''')
     args = parser.parse_args()
     main(**vars(args))

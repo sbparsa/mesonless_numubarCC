@@ -3,7 +3,7 @@ import numpy as np
 loc_dict={'o':'Outside Active Volume',
           'f':'LAr Fiducial Volume',
           'u':r'MINER$\nu$A Upstream',
-          'd':r'MINER$\nu$A Downstrem',
+          'd':r'MINER$\nu$A Downstream',
           'm':r'MINER$\nu$A',
           '0':'TPC 0',
           '1':'TPC 1',
@@ -14,6 +14,12 @@ loc_dict={'o':'Outside Active Volume',
           '6':'TPC 6',
           '7':'TPC 7'}
 
+particle_end_loc_dict = {'f':'Stops in LAr Fiducial Volume',
+                         'd':r'Stops in MINER$\nu$A Downstream',
+                         'b':r'Exits back of MINER$\nu$A Downstream',
+                         's':r'Exits side of MINER$\nu$A Downstream',
+                         'p':r'Exits from LAr Fiducial Volume',
+                         'u':r'Stops in MINER$\nu$A Upstream'}
 
 #### geometry definitions copied straight from https://github.com/DUNE/2x2_sim/blob/main/validation/edepsim_validation.py
 
@@ -101,17 +107,6 @@ def fiducialized_vertex(vert_pos):
 =True
     return flag
 
-def MINERvA_vertex(vert_pos):
-    flag=False; x_drift_flag=False; y_vertical_flag=False; z_beam_flag=False
-    for i in range(3):
-        for i_bounds, bounds in enumerate(MINERvA_bounds(i)):
-            if vert_pos[i]>bounds[0] and vert_pos[i]<bounds[1]:
-                if i==0: x_drift_flag=True; break
-                if i==1: y_vertical_flag=True
-                if i==2: z_beam_flag=True
-    if x_drift_flag==True and y_vertical_flag==True and z_beam_flag==True: flag=True
-    return flag
-
 
 def tpc_vertex(vert_pos):
     temp=[]
@@ -175,3 +170,74 @@ def fiducialized_particle_origin(traj, vert_id):
         if fiducialized_vertex(fs['xyz_start'])==True:
             return True
     return False
+
+
+##### PARTICLE ENDPOINT LOCATION DEFINITION ---------------------
+
+''' Inputs: ([x,y,z] vector) particle trajectory start point
+            ([x,y,z] vector) particle trajectory end point
+    Output: (string) tells where trajectory ends and/or exits detectors (key for dictionary)'''
+def particle_end_loc(particle_start, particle_end):
+
+    ## TO DO: add possibility of particle leaving from side or front of minerva upstream
+    end_pt_loc = ''
+
+    if fiducialized_vertex(particle_end):
+        end_pt_loc = 'f'
+    elif minerva_vertex(particle_end)[0]==True and minerva_vertex(particle_end)[1]==True:
+        end_pt_loc = 'u'
+    elif minerva_vertex(particle_end)[0]==True and minerva_vertex(particle_end)[1]==False:
+        end_pt_loc = 'd'
+    else:
+        x_MINERvA = MINERvA_bounds(0)[0]
+        y_MINERvA = MINERvA_bounds(1)[0]
+        z_MINERvA_down = MINERvA_bounds(2)[1]
+        z_tpc_down = tpc_bounds(2)[1]
+
+        # Check whether endpoint Z is between 2x2 and MINERvA Downstream
+        if particle_end[2]<z_MINERvA_down[0] and particle_end[2]>z_tpc_down[1]:
+                end_pt_loc = 'p'
+
+        # Check leaving back or side of MINERvA
+        else:
+            traj_vector = particle_end - particle_start
+
+            if particle_end[2]>z_MINERvA_down[0] and particle_end[2]<z_MINERvA_down[1]:
+
+                traj_param_front = (particle_end[2] - z_MINERvA_down[0])/traj_vector[2]
+                minerva_down_front_intersect = particle_end + traj_param_front*traj_vector
+
+                if minerva_down_front_intersect[0] > x_MINERvA[0] and minerva_down_front_intersect[0] < x_MINERvA[1] and\
+                    minerva_down_front_intersect[1] > y_MINERvA[0] and minerva_down_front_intersect[1] < y_MINERvA[1]:
+
+                    end_pt_loc = 's'
+
+                else:
+                    end_pt_loc = 'p'
+
+            elif particle_end[2]>z_MINERvA_down[1]:
+
+                traj_param_back = (z_MINERvA_down[1] - particle_end[2])/traj_vector[2]
+                minerva_down_back_intersect = particle_end + traj_param_back*traj_vector
+
+                traj_param_front = (z_MINERvA_down[0] - particle_end[2])/traj_vector[2]
+                minerva_down_front_intersect = particle_end + traj_param_front*traj_vector
+
+                if (minerva_down_back_intersect[2]-z_MINERvA_down[1]) > 0.01: 
+                    print("STOP: MATH ERROR IN INTERSECTION CALCULATION!")
+                    print('MINERvA back Z intersect:', round(minerva_down_back_intersect[2], 2))
+                    print('MINERvA back Z:', z_MINERvA_down[1])
+                if minerva_down_back_intersect[0] > x_MINERvA[0] and minerva_down_back_intersect[0] < x_MINERvA[1] and\
+                    minerva_down_back_intersect[1] > y_MINERvA[0] and minerva_down_back_intersect[1] < y_MINERvA[1]:
+                    
+                    end_pt_loc = 'b'
+
+                elif minerva_down_front_intersect[0] > x_MINERvA[0] and minerva_down_front_intersect[0] < x_MINERvA[1] and\
+                    minerva_down_front_intersect[1] > y_MINERvA[0] and minerva_down_front_intersect[1] < y_MINERvA[1]:
+                    
+                    end_pt_loc = 's'
+                
+                else: 
+                    end_pt_loc = 'p'
+
+    return end_pt_loc
